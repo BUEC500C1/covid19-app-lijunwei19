@@ -1,41 +1,111 @@
-import React from 'react';
-import MapView from 'react-native-maps';
-import { StyleSheet, Text, View, Dimensions } from 'react-native';
+import React, { Component } from 'react'
+import {StyleSheet,TouchableOpacity,Text,View,} from 'react-native'
+import MapView, { PROVIDER_GOOGLE, Marker, Callout } from 'react-native-maps'; // remove PROVIDER_GOOGLE import if not using Google Maps
 
-export default class App extends React.Component {
+export default class Map extends Component {
+  constructor(props){
+    super(props)
+    this.state = {countryname:'',totalCases: '',totalRecovered: '',totalDeaths: '',
+      jsondata:[]
+    };
+}
+  componentDidMount() {
+    var requestOptions = {
+      method: 'GET',
+      redirect: 'follow'
+    };
+    
+    fetch('https://api.covid19api.com/summary', requestOptions)
+      .then(response => response.json())
+      .then(json => {
+        this.setState({
+          totalCases: json['Countries'][236]['TotalConfirmed'],
+        });
+        this.setState({
+          totalRecovered: json['Countries'][236]['TotalRecovered'],
+        });        
+        this.setState({
+          totalDeaths: json['Countries'][236]['TotalDeaths'],
+        });
+        this.setState({
+          countryname: json['Countries'][236]['Country'],
+        });
+       
+        this.setState({ 
+          jsondata: json.Global,
+        });
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }
   render() {
     return (
-      <View style={styles.container}>
-        <MapView style={styles.mapStyle}
-          initialRegion={{
-              latitude: 40.758896, //the loaction of New York City
-              longitude:  -73.985130,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421
+
+      <View>
+        <MapView
+          provider={PROVIDER_GOOGLE} // remove if not using Google Maps
+          style={styles.map}
+          region={{
+            
+            latitude: 37,
+            longitude: -100,
+            latitudeDelta: 35,
+            longitudeDelta: 35,
+            
           }}
         >
-        <MapView.Marker
-            coordinate={{latitude: 40.758896,
-            longitude: -73.985130}}
-            title={"marker"}
-            description={"times square"}
-         />
-      </MapView>
-        
+          <Marker
+          coordinate = {{latitude: 40, longitude: -100}}
+          >
+            <Callout>
+              <Text style = {styles.text}>{this.state.countryname}</Text>
+              <Text style = {styles.text}>Totoal Confirmed:{this.state.totalCases}</Text>
+              <Text style = {styles.text}>Totoal Recovered:{this.state.totalRecovered}</Text>
+              <Text style = {styles.text}>Totoal Deaths:{this.state.totalDeaths}</Text>
+            </Callout>
+          </Marker>
+          <Marker
+          coordinate = {{latitude: 35.8, longitude: 104}}
+          >
+            <Callout>
+              <Text style = {styles.text}>China</Text>
+              <Text style = {styles.text}>Totoal Confirmed:{this.state.totalCNCases}</Text>
+              <Text style = {styles.text}>Totoal Recovered:{this.state.totalCNRecovered}</Text>
+              <Text style = {styles.text}>Totoal Deaths:{this.state.totalCNDeaths}</Text>
+            </Callout>
+          </Marker>
+
+        </MapView>
       </View>
-    );
+    )
   }
-}
+};
 
 const styles = StyleSheet.create({
+  popup:{
+    backgroundColor: '#233',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent:'center'
   },
-  mapStyle: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
+  map: {
+     height: '100%',
+     width: '100%'
+  },
+  title: {
+    color: '#223',
+    padding:20,
+    fontWeight: 'bold',
+    fontSize: 30,
+    textAlign: 'center'
+  },
+  text: {
+    color: '#000',
+    padding: 2,
+    fontSize:15,
+    textAlign: 'center'
   },
 });
